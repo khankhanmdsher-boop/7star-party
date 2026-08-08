@@ -1,22 +1,43 @@
 const express = require('express');
-const app = express();
-const path = require('path');
-const PORT = process.env.PORT || 10000;
+const http = require('http');
+const { Server } = require('socket.io');
 
-// ब्राउज़र कैश को पूरी तरह बंद करने का Header
-app.use((req, res, next) => {
-    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
-    next();
+const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+    cors: { origin: "*" }
 });
 
-app.use(express.static(__dirname));
+const PORT = process.env.PORT || 10000;
 
-app.get('/admin', (req, res) => {
-    res.sendFile(path.join(__dirname, 'admin.html'));
+// वॉइस रूम कनेक्शन हैंडलर
+io.on('connection', (socket) => {
+    console.log('एक यूज़र कनेक्ट हुआ:', socket.id);
+
+    // रूम जॉइन करना
+    socket.on('join-room', (roomId, userId) => {
+        socket.join(roomId);
+        socket.to(roomId).emit('user-connected', userId);
+        console.log(`User ${userId} joined room: ${roomId}`);
+
+        socket.on('disconnect', () => {
+            socket.to(roomId).emit('user-disconnected', userId);
+        });
+    });
+
+    // वॉइस डेटा ट्रांसफर (WebRTC Signaling)
+    socket.on('signal', (data) => {
+        io.to(data.to).emit('signal', {
+            from: socket.id,
+            signal: data.signal
+        });
+    });
 });
 
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'admin.html'));
+    res.send('<h1>7 Star Voice Engine is Live & Running! 🎙️</h1>');
 });
 
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+server.listen(PORT, () => {
+    console.log(`Voice Server listening on port ${PORT}`);
+});
