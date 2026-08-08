@@ -20,7 +20,7 @@
 <body>
 
     <h1>🎙️ 7 Star Voice Party Room</h1>
-    <p style="color: #a0aec0; font-size: 14px;">Room ID: <span id="roomIdDisplay">101</span></p>
+    <p style="color: #a0aec0; font-size: 14px;">Status: <span id="status" style="color:#00ff88;">Connecting...</span></p>
 
     <!-- 8 Seats Grid for Speakers -->
     <div class="grid">
@@ -34,26 +34,34 @@
         <div class="seat">Seat 8</div>
     </div>
 
-    <!-- Bottom Controls -->
     <div class="controls">
         <button class="btn-mic" onclick="toggleMic()">🎙️ Mic ON</button>
-        <button class="btn-leave" onclick="alert('Left Room')">🚪 Exit</button>
+        <button class="btn-leave" onclick="location.reload()">🚪 Leave</button>
     </div>
 
     <script>
         const socket = io();
+        let localStream;
         let micOn = true;
 
+        // माइक्रोफोन एक्सेस चालू करना
+        navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+            .then(stream => {
+                localStream = stream;
+                document.getElementById('status').innerText = 'Connected & Live 🎙️';
+            })
+            .catch(err => {
+                document.getElementById('status').innerText = 'Mic Access Denied ❌';
+                document.getElementById('status').style.color = '#ff4d4d';
+            });
+
         function toggleMic() {
+            if (!localStream) return;
             micOn = !micOn;
+            localStream.getAudioTracks()[0].enabled = micOn;
             const btn = document.querySelector('.btn-mic');
-            if (micOn) {
-                btn.innerText = '🎙️ Mic ON';
-                btn.style.background = '#00ff88';
-            } else {
-                btn.innerText = '🎙️ Mic OFF';
-                btn.style.background = '#e2e8f0';
-            }
+            btn.innerText = micOn ? '🎙️ Mic ON' : '🎙️ Mic OFF';
+            btn.style.background = micOn ? '#00ff88' : '#e2e8f0';
         }
     </script>
 </body>
