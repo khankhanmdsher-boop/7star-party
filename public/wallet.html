@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>7 Star - Wallet & Recharge</title>
+    <style>
+        body { background: #0f0f12; color: #fff; font-family: Arial, sans-serif; padding: 20px; }
+        h1 { color: #FFD700; border-bottom: 2px solid #333; padding-bottom: 10px; }
+        .card { background: #1a1a24; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #333; }
+        input, button { padding: 10px; margin: 5px 0; border-radius: 5px; border: none; font-weight: bold; width: 100%; box-sizing: border-box; }
+        button { background: #FFD700; color: #000; cursor: pointer; margin-top: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #333; padding: 10px; text-align: left; }
+        th { background: #222; color: #FFD700; }
+    </style>
+</head>
+<body>
+    <h1>🪙 7 Star Wallet & Coin Recharge</h1>
+
+    <div class="card">
+        <h3>User Coin Recharge</h3>
+        <input type="text" id="targetUserId" placeholder="User ID लिखें (जैसे 103)">
+        <input type="number" id="coinAmount" placeholder="Coin Amount लिखें (जैसे 5000)">
+        <button onclick="addCoins()">Recharge Coins</button>
+    </div>
+
+    <div class="card">
+        <h3>User Balances</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>User ID</th>
+                    <th>Name</th>
+                    <th>Coins</th>
+                    <th>Diamonds</th>
+                </tr>
+            </thead>
+            <tbody id="walletTable"></tbody>
+        </table>
+    </div>
+
+    <script>
+        async function loadWallets() {
+            const res = await fetch('/api/users');
+            const data = await res.json();
+            const table = document.getElementById('walletTable');
+            table.innerHTML = '';
+            data.forEach(u => {
+                table.innerHTML += `
+                    <tr>
+                        <td>${u.id}</td>
+                        <td>${u.name}</td>
+                        <td><b style="color: #FFD700">${u.coins} 🪙</b></td>
+                        <td><b style="color: #00e5ff">${u.diamonds} 💎</b></td>
+                    </tr>
+                `;
+            });
+        }
+
+        async function addCoins() {
+            const userId = document.getElementById('targetUserId').value;
+            const amount = document.getElementById('coinAmount').value;
+            if (!userId || !amount) return alert("दोनों डिटेल्स भरें!");
+
+            const res = await fetch('/api/add-coins', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId, amount })
+            });
+            const data = await res.json();
+            alert(data.message);
+            loadWallets();
+        }
+        loadWallets();
+    </script>
+</body>
+</html>

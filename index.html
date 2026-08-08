@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>7 Star Party Room</title>
+<script src="/socket.io/socket.io.js"></script>
+<style>
+body { background: #121212; color: white; text-align: center; font-family: sans-serif; margin: 0; padding: 15px; }
+h1 { color: #ffd700; margin-bottom: 5px; font-size: 22px; }
+.mic-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; max-width: 380px; margin: 15px auto; }
+.mic { width: 65px; height: 65px; border-radius: 50%; background: #2a2a2a; border: 2px solid #555; display: flex; align-items: center; justify-content: center; cursor: pointer; margin: auto; font-size: 13px; }
+.mic.active { background: #ff4757; border-color: #ff6b81; box-shadow: 0 0 10px #ff4757; }
+.chat-box { width: 90%; max-width: 380px; height: 150px; background: #1e1e1e; border: 1px solid #333; margin: 10px auto; border-radius: 8px; overflow-y: auto; text-align: left; padding: 8px; box-sizing: border-box; font-size: 13px; }
+.input-area { display: flex; gap: 5px; max-width: 380px; margin: auto; }
+input { flex: 1; padding: 8px; border-radius: 5px; border: none; background: #2a2a2a; color: white; }
+button { padding: 8px 15px; border-radius: 5px; border: none; background: #ffd700; color: black; font-weight: bold; cursor: pointer; }
+.gift-btn { background: #ff4757; color: white; margin-left: 5px; }
+</style>
+</head>
+<body>
+<h1>⭐ 7 Star Party Room ⭐</h1>
+<p style="font-size: 12px; color: #aaa;">Live Voice & Chat Room</p>
+
+<div class="mic-grid">
+  <div class="mic" onclick="toggleMic(this, 1)">Mic 1</div>
+  <div class="mic" onclick="toggleMic(this, 2)">Mic 2</div>
+  <div class="mic" onclick="toggleMic(this, 3)">Mic 3</div>
+  <div class="mic" onclick="toggleMic(this, 4)">Mic 4</div>
+  <div class="mic" onclick="toggleMic(this, 5)">Mic 5</div>
+  <div class="mic" onclick="toggleMic(this, 6)">Mic 6</div>
+  <div class="mic" onclick="toggleMic(this, 7)">Mic 7</div>
+  <div class="mic" onclick="toggleMic(this, 8)">Mic 8</div>
+</div>
+
+<div class="chat-box" id="chat"></div>
+
+<div class="input-area">
+  <input type="text" id="msg" placeholder="Type message...">
+  <button onclick="sendMsg()">Send</button>
+  <button class="gift-btn" onclick="sendGift()">🎁 Gift</button>
+</div>
+
+<script>
+const socket = io();
+let localStream;
+
+function sendMsg() {
+  const input = document.getElementById('msg');
+  if(input.value.trim() !== "") {
+    appendChat("You: " + input.value);
+    input.value = "";
+  }
+}
+
+function sendGift() {
+  appendChat("🎁 You sent a Rose gift!");
+}
+
+function appendChat(text) {
+  const chat = document.getElementById('chat');
+  chat.innerHTML += "<div>" + text + "</div>";
+  chat.scrollTop = chat.scrollHeight;
+}
+
+async function toggleMic(element, id) {
+  element.classList.toggle('active');
+  if (element.classList.contains('active')) {
+    try {
+      localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (e) { alert('Microphone Access Denied!'); }
+  } else {
+    if(localStream) localStream.getTracks().forEach(t => t.stop());
+  }
+}
+</script>
+</body>
+</html>

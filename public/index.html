@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>7 Star - Group Voice Party</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        body { background-color: #121212; color: #fff; font-family: Arial, sans-serif; text-align: center; margin: 0; padding: 20px; }
+        h1 { color: #FFD700; text-shadow: 0 0 10px #FFD700; margin-bottom: 5px; }
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; max-width: 400px; margin: 30px auto; }
+        .seat { background: #1e1e1e; border: 2px solid #444; border-radius: 50%; width: 70px; height: 70px; display: flex; align-items: center; justify-content: center; margin: auto; cursor: pointer; transition: 0.3s; font-size: 12px; }
+        .seat.occupied { border-color: #FFD700; background: #332a00; box-shadow: 0 0 12px #FFD700; color: #FFD700; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>⭐ 7 Star Party Room ⭐</h1>
+    <p id="status">Connecting...</p>
+    <div class="grid" id="seatsGrid"></div>
+
+    <script>
+        const socket = io();
+        const seatsGrid = document.getElementById('seatsGrid');
+        const status = document.getElementById('status');
+        const roomId = "room_1";
+        const userId = "user_" + Math.floor(Math.random() * 1000);
+
+        socket.emit('join_room', { roomId, userId, userName: userId });
+
+        socket.on('room_state', (data) => {
+            status.innerText = "Live Voice Room 1";
+            renderSeats(data.seats);
+        });
+
+        socket.on('seat_updated', (data) => {
+            renderSeats(data.seats);
+        });
+
+        function renderSeats(seats) {
+            seatsGrid.innerHTML = '';
+            seats.forEach((seat, index) => {
+                const div = document.createElement('div');
+                div.className = `seat ${seat ? 'occupied' : ''}`;
+                div.innerText = seat ? seat.userName.slice(-4) : `Mic ${index + 1}`;
+                div.onclick = () => {
+                    if (!seat) socket.emit('take_seat', { roomId, seatIndex: index, userId, userName: userId });
+                };
+                seatsGrid.appendChild(div);
+            });
+        }
+    </script>
+</body>
+</html>

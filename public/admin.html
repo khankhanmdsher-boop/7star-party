@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>7 Star - Control Panel</title>
+    <style>
+        body { background: #0f0f12; color: #fff; font-family: Arial, sans-serif; padding: 20px; }
+        h1 { color: #FFD700; border-bottom: 2px solid #333; padding-bottom: 10px; }
+        .card { background: #1a1a24; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #333; }
+        select, button { padding: 8px 12px; border-radius: 5px; border: none; font-weight: bold; }
+        button { background: #FFD700; color: #000; cursor: pointer; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #333; padding: 10px; text-align: left; }
+        th { background: #222; color: #FFD700; }
+    </style>
+</head>
+<body>
+    <h1>👑 7 Star Executive Control Panel</h1>
+    <div class="card">
+        <h3>Role & Access Management</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>User ID</th>
+                    <th>Name</th>
+                    <th>Role</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="userTable"></tbody>
+        </table>
+    </div>
+
+    <script>
+        async function loadUsers() {
+            const res = await fetch('/api/users');
+            const data = await res.json();
+            const table = document.getElementById('userTable');
+            table.innerHTML = '';
+            data.forEach(u => {
+                table.innerHTML += `
+                    <tr>
+                        <td>${u.id}</td>
+                        <td>${u.name}</td>
+                        <td><b style="color: #FFD700">${u.role}</b></td>
+                        <td>
+                            <select id="role_${u.id}">
+                                <option value="USER">USER</option>
+                                <option value="ADMIN">ADMIN</option>
+                                <option value="CEO">CEO</option>
+                                <option value="SUPER_ADMIN">SUPER_ADMIN</option>
+                            </select>
+                            <button onclick="updateRole('${u.id}')">Save</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        async function updateRole(userId) {
+            const newRole = document.getElementById(`role_${userId}`).value;
+            await fetch('/api/change-role', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId, newRole })
+            });
+            alert("Role Updated Successfully!");
+            loadUsers();
+        }
+        loadUsers();
+    </script>
+</body>
+</html>
