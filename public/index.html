@@ -2,21 +2,23 @@
 <html lang="hi">
 <head>
     <meta charset="UTF-8">
-    <title>7 Star Greedy Master</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>7 Star Voice Party & Greedy Game</title>
     <script src="/socket.io/socket.io.js"></script>
     <style>
-        body { background: #0f0c29; color: #fff; font-family: sans-serif; text-align: center; padding: 10px; }
+        body { background: #0f0c29; color: #fff; font-family: sans-serif; text-align: center; padding: 10px; margin: 0; }
         .container { max-width: 400px; margin: auto; background: #1a1a2e; padding: 15px; border-radius: 15px; border: 2px solid #ffd700; }
         .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 15px 0; }
         .box { padding: 15px; background: #333; border: 2px solid #555; cursor: pointer; border-radius: 8px; font-weight: bold; }
         .selected { background: #ffd700; color: #000; border-color: #fff; }
         select, button { width: 100%; padding: 12px; margin: 5px 0; border-radius: 8px; border: none; font-size: 16px; }
         .btn-play { background: #28a745; color: #fff; font-weight: bold; cursor: pointer; }
+        #chatBox { height: 120px; overflow-y: auto; border: 1px solid #444; margin-top: 10px; font-size: 12px; text-align: left; padding: 5px; background: rgba(0,0,0,0.3); }
     </style>
 </head>
 <body>
     <div class="container">
-        <h3>💰 7 Star Greedy Game</h3>
+        <h3>👑 7 Star Party & Greedy Game</h3>
         <p>Wallet: <span id="myCoins" style="color:#ffd700; font-weight:bold;">0</span> Coins</p>
         
         <select id="betAmount">
@@ -40,14 +42,19 @@
         </div>
 
         <button class="btn-play" onclick="playGame()">PLAY GAME</button>
-        <div id="chatBox" style="height:100px; overflow-y:auto; border:1px solid #444; margin-top:10px; font-size:12px; text-align:left; padding:5px;"></div>
+        <div id="chatBox"></div>
     </div>
 
     <script>
         const socket = io();
         let selectedBoxes = [];
+        
         socket.on('balance-update', (c) => document.getElementById('myCoins').innerText = c);
-        socket.on('chat-alert', (m) => document.getElementById('chatBox').innerHTML += `<div>${m}</div>`);
+        socket.on('chat-alert', (m) => {
+            const box = document.getElementById('chatBox');
+            box.innerHTML += `<div>${m}</div>`;
+            box.scrollTop = box.scrollHeight;
+        });
 
         function toggleBox(id) {
             const el = document.getElementById('box'+id);
