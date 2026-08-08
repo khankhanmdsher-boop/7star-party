@@ -17,6 +17,8 @@ app.get('*', (req, res) => {
 io.on('connection', (socket) => {
     socket.on('chat-msg', (data) => socket.broadcast.emit('chat-msg', data));
     socket.on('seat-take', (data) => io.emit('seat-update', data));
+    socket.on('seat-leave', (data) => io.emit('seat-remove', data));
+    socket.on('admin-action', (data) => io.emit('admin-action-received', data));
 });
 
 server.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
