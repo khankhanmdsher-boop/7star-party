@@ -8,23 +8,22 @@ const path = require('path');
 let users = {};
 
 if (fs.existsSync('users.json')) {
-    try {
-        users = JSON.parse(fs.readFileSync('users.json'));
-    } catch (e) {
-        users = {};
-    }
+    try { users = JSON.parse(fs.readFileSync('users.json')); } catch (e) { users = {}; }
 }
 
 function saveData() {
     fs.writeFileSync('users.json', JSON.stringify(users, null, 2));
 }
 
-// Static files server setup
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(__dirname));
 
-// Explicit route for homepage
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+app.get('*', (req, res) => {
+    if (fs.existsSync(path.join(__dirname, 'public', 'index.html'))) {
+        res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    } else {
+        res.sendFile(path.join(__dirname, 'index.html'));
+    }
 });
 
 io.on('connection', (socket) => {
