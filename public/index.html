@@ -3,32 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>7 Star Party & Voice Room</title>
+    <title>7 Star Voice Party Room</title>
     <style>
-        body { background: #0f1020; color: #fff; font-family: Arial, sans-serif; text-align: center; margin: 0; padding: 20px; }
-        .container { max-width: 500px; margin: auto; background: #1a1b35; padding: 20px; border-radius: 12px; border: 2px solid #f39c12; }
-        .wallet { font-size: 18px; margin-bottom: 15px; color: #f1c40f; }
-        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
-        .seat { background: #2c3e50; border: 2px dashed #f39c12; border-radius: 50%; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 14px; color: #bdc3c7; cursor: pointer; position: relative; }
-        .seat.active { background: #27ae60; border-style: solid; color: #fff; }
+        body { background: #0b0c10; color: #fff; font-family: Arial, sans-serif; text-align: center; margin: 0; padding: 15px; }
+        .container { max-width: 480px; margin: auto; background: #1f2833; padding: 15px; border-radius: 12px; border: 2px solid #66fcf1; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-size: 16px; color: #66fcf1; font-weight: bold; }
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 15px; }
+        .seat { background: #0b0c10; border: 2px dashed #45a29e; border-radius: 10px; aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 12px; color: #c5c6c7; cursor: pointer; }
+        .seat.active { border-style: solid; border-color: #66fcf1; background: #1f4068; color: #fff; }
         .controls { display: flex; gap: 10px; justify-content: center; }
-        button { padding: 10px 20px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
-        .btn-speak { background: #27ae60; color: #fff; }
-        .btn-leave { background: #c0392b; color: #fff; }
+        button { padding: 10px 15px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; width: 50%; font-size: 14px; }
+        .btn-speak { background: #4e9f3d; color: #fff; }
+        .btn-leave { background: #d72323; color: #fff; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>👑 7 Star Voice Party</h2>
-        <div class="wallet">Coins: <span id="coins">5000000</span></div>
+        <div class="header">
+            <span>👑 7 Star Voice</span>
+            <span>Coins: <span id="coins">5000000</span></span>
+        </div>
         
-        <h3>Voice Seats (Users Talking)</h3>
         <div class="grid" id="seatGrid">
-            <div class="seat active">Seat 1</div>
+            <div class="seat active">Seat 1<br><small>Host</small></div>
             <div class="seat">Seat 2</div>
             <div class="seat">Seat 3</div>
             <div class="seat">Seat 4</div>
-            <div class="seat">Seat  5</div>
+            <div class="seat">Seat 5</div>
             <div class="seat">Seat 6</div>
             <div class="seat">Seat 7</div>
             <div class="seat">Seat 8</div>
@@ -36,17 +37,13 @@
 
         <div class="controls">
             <button class="btn-speak" onclick="toggleMic()">Take Mic</button>
-            <button class="btn-leave" onclick="leaveMic()">Leave Seat</button>
+            <button class="btn-leave" onclick="leaveMic()">Leave</button>
         </div>
     </div>
 
     <script>
-        function toggleMic() {
-            alert("Voice mic connected!");
-        }
-        function leaveMic() {
-            alert("Left the voice seat.");
-        }
+        function toggleMic() { alert("Mic Connected!"); }
+        function leaveMic() { alert("Left Seat."); }
     </script>
 </body>
 </html>
