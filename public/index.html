@@ -3,25 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>7 Star Voice Party Room</title>
+    <title>7 Star Voice Party</title>
     <style>
-        body { background: #0b0c10; color: #fff; font-family: Arial, sans-serif; text-align: center; margin: 0; padding: 15px; }
-        .container { max-width: 480px; margin: auto; background: #1f2833; padding: 15px; border-radius: 12px; border: 2px solid #66fcf1; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-size: 16px; color: #66fcf1; font-weight: bold; }
+        body { background: #0b0c10; color: #fff; font-family: Arial, sans-serif; margin: 0; padding: 10px; }
+        .container { max-width: 480px; margin: auto; background: #1f2833; padding: 15px; border-radius: 12px; border: 2px solid #f39c12; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-size: 16px; color: #f1c40f; font-weight: bold; }
+        .nav-tabs { display: flex; justify-content: space-around; background: #0b0c10; padding: 8px; border-radius: 8px; margin-bottom: 15px; }
+        .nav-tab { color: #c5c6c7; cursor: pointer; font-size: 14px; font-weight: bold; }
+        .nav-tab.active { color: #f1c40f; border-bottom: 2px solid #f1c40f; }
         .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 15px; }
-        .seat { background: #0b0c10; border: 2px dashed #45a29e; border-radius: 10px; aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 12px; color: #c5c6c7; cursor: pointer; }
-        .seat.active { border-style: solid; border-color: #66fcf1; background: #1f4068; color: #fff; }
-        .controls { display: flex; gap: 10px; justify-content: center; }
+        .seat { background: #0b0c10; border: 2px dashed #f39c12; border-radius: 10px; aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 12px; color: #c5c6c7; cursor: pointer; }
+        .seat.active { border-style: solid; border-color: #27ae60; background: #1f4068; color: #fff; }
+        .controls { display: flex; gap: 10px; justify-content: center; margin-bottom: 15px; }
         button { padding: 10px 15px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; width: 50%; font-size: 14px; }
-        .btn-speak { background: #4e9f3d; color: #fff; }
-        .btn-leave { background: #d72323; color: #fff; }
+        .btn-speak { background: #27ae60; color: #fff; }
+        .btn-leave { background: #c0392b; color: #fff; }
+        .ranking-section { background: #0b0c10; padding: 10px; border-radius: 8px; margin-top: 10px; }
+        .rank-item { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #222; font-size: 13px; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <span>👑 7 Star Voice</span>
+            <span>👑 7 Star Party</span>
             <span>Coins: <span id="coins">5000000</span></span>
+        </div>
+
+        <div class="nav-tabs">
+            <div class="nav-tab active">Party</div>
+            <div class="nav-tab">Ranking</div>
+            <div class="nav-tab">Live Chat</div>
         </div>
         
         <div class="grid" id="seatGrid">
@@ -38,6 +49,13 @@
         <div class="controls">
             <button class="btn-speak" onclick="toggleMic()">Take Mic</button>
             <button class="btn-leave" onclick="leaveMic()">Leave</button>
+        </div>
+
+        <div class="ranking-section">
+            <h4>🏆 Room Rankings</h4>
+            <div class="rank-item"><span>1. Rachel</span><span>11.4M Coins</span></div>
+            <div class="rank-item"><span>2. Emma</span><span>6.7M Coins</span></div>
+            <div class="rank-item"><span>3. Christopher</span><span>6.0M Coins</span></div>
         </div>
     </div>
 
