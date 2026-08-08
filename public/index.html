@@ -6,67 +6,196 @@
     <title>7 Star Party Room</title>
     <script src="/socket.io/socket.io.js"></script>
     <style>
-        body { background-color: #0d0f12; color: #fff; font-family: sans-serif; text-align: center; margin: 0; padding: 15px; }
-        .header { display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #161b22; border-radius: 8px; margin-bottom: 15px; }
-        .coins { color: #ffd700; font-weight: bold; font-size: 14px; }
-        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; max-width: 360px; margin: 15px auto; }
-        .seat { background: #1f242d; border: 2px dashed #30363d; border-radius: 50%; width: 68px; height: 68px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; margin: auto; cursor: pointer; color: #8b949e; position: relative; }
-        .seat.taken { border: 2px solid #00ff88; background: #0e2a1f; color: #00ff88; font-weight: bold; box-shadow: 0 0 8px #00ff88; }
-        .chat-box { background: #161b22; border: 1px solid #30363d; border-radius: 8px; height: 160px; max-width: 360px; margin: 15px auto; overflow-y: auto; text-align: left; padding: 10px; font-size: 13px; }
+        :root {
+            --bg-grad: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            --card-bg: rgba(255, 255, 255, 0.08);
+        }
+
+        body {
+            background: var(--bg-grad);
+            color: #fff;
+            font-family: 'Segoe UI', sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 15px;
+            min-height: 100vh;
+            transition: all 0.5s ease;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: rgba(0, 0, 0, 0.35);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            padding: 15px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: var(--card-bg);
+            border-radius: 12px;
+            margin-bottom: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .coins { color: #ffd700; font-weight: bold; font-size: 14px; text-shadow: 0 0 10px rgba(255,215,0,0.5); }
+
+        .theme-selector {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .theme-btn {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            cursor: pointer;
+        }
+
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 15px auto; }
+
+        /* Chair / Seat Styling */
+        .seat {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 18px;
+            width: 72px;
+            height: 75px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            margin: auto;
+            cursor: pointer;
+            color: #ddd;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .chair-icon {
+            font-size: 24px;
+            margin-bottom: 2px;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+        }
+
+        .seat-label {
+            font-size: 10px;
+            color: #aaa;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 60px;
+        }
+
+        .seat.taken {
+            border: 2px solid #00ff88;
+            background: rgba(0, 255, 136, 0.15);
+            color: #00ff88;
+            box-shadow: 0 0 12px rgba(0, 255, 136, 0.4);
+        }
+
+        .seat.taken .chair-icon {
+            animation: pulse 1.5s infinite alternate;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.1); }
+        }
+
+        .chat-box {
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            height: 160px;
+            margin: 15px auto;
+            overflow-y: auto;
+            text-align: left;
+            padding: 10px;
+            font-size: 13px;
+        }
+
         .chat-msg { margin-bottom: 6px; word-wrap: break-word; }
-        .input-area { display: flex; gap: 8px; max-width: 360px; margin: auto; }
-        input { flex: 1; padding: 10px; background: #161b22; border: 1px solid #30363d; color: #fff; border-radius: 6px; outline: none; }
-        button { padding: 10px 14px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
-        .btn-send { background: #ffd700; color: #000; }
-        .btn-gift { background: #ff4d4d; color: #fff; }
-        .btn-mic { background: #238636; color: #fff; width: 100%; margin-top: 10px; padding: 10px; border-radius: 6px; }
-        .admin-panel { background: #161b22; border: 1px solid #da3633; border-radius: 8px; padding: 10px; max-width: 360px; margin: 15px auto; display: flex; gap: 5px; }
-        .admin-btn { background: #da3633; color: #fff; font-size: 11px; flex: 1; }
+        .input-area { display: flex; gap: 8px; }
+
+        input {
+            flex: 1;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            border-radius: 10px;
+            outline: none;
+        }
+
+        button {
+            padding: 10px 14px;
+            border: none;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .btn-send { background: linear-gradient(45deg, #ffd700, #ffa500); color: #000; }
+        .btn-gift { background: linear-gradient(45deg, #ff416c, #ff4b2b); color: #fff; }
+        .btn-mic { background: linear-gradient(45deg, #11998e, #38ef7d); color: #fff; width: 100%; margin-top: 10px; padding: 12px; border-radius: 10px; font-size: 14px; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <div>
-            <span style="font-weight:bold; color:#ffd700;">👑 7 Star Party</span><br>
-            <span style="font-size:11px; color:#8b949e;" id="userDisplay">ID: Loading...</span>
+    <div class="container">
+        <!-- Theme Switcher -->
+        <div class="theme-selector">
+            <div class="theme-btn" style="background: linear-gradient(135deg, #0f0c29, #24243e);" onclick="setTheme(1)"></div>
+            <div class="theme-btn" style="background: linear-gradient(135deg, #0575E6, #00F666);" onclick="setTheme(2)"></div>
+            <div class="theme-btn" style="background: linear-gradient(135deg, #3A1C71, #D76D77, #FFAF7B);" onclick="setTheme(3)"></div>
+            <div class="theme-btn" style="background: linear-gradient(135deg, #141E30, #243B55);" onclick="setTheme(4)"></div>
         </div>
-        <span class="coins">💰 <span id="coinCount">1000</span></span>
+
+        <div class="header">
+            <div style="text-align: left;">
+                <span style="font-weight:bold; color:#ffd700; font-size: 16px;">👑 7 Star Party</span><br>
+                <span style="font-size:11px; color:#aaa;" id="userDisplay">ID: Loading...</span>
+            </div>
+            <span class="coins">💰 <span id="coinCount">1000</span></span>
+        </div>
+
+        <!-- 8 Chairs Grid -->
+        <div class="grid" id="seatGrid">
+            <div class="seat" onclick="handleSeatClick(1)" id="seat1"><div class="chair-icon">🪑</div><span class="seat-label" id="s1">Seat 1</span></div>
+            <div class="seat" onclick="handleSeatClick(2)" id="seat2"><div class="chair-icon">🪑</div><span class="seat-label" id="s2">Seat 2</span></div>
+            <div class="seat" onclick="handleSeatClick(3)" id="seat3"><div class="chair-icon">🪑</div><span class="seat-label" id="s3">Seat 3</span></div>
+            <div class="seat" onclick="handleSeatClick(4)" id="seat4"><div class="chair-icon">🪑</div><span class="seat-label" id="s4">Seat 4</span></div>
+            <div class="seat" onclick="handleSeatClick(5)" id="seat5"><div class="chair-icon">🪑</div><span class="seat-label" id="s5">Seat 5</span></div>
+            <div class="seat" onclick="handleSeatClick(6)" id="seat6"><div class="chair-icon">🪑</div><span class="seat-label" id="s6">Seat 6</span></div>
+            <div class="seat" onclick="handleSeatClick(7)" id="seat7"><div class="chair-icon">🪑</div><span class="seat-label" id="s7">Seat 7</span></div>
+            <div class="seat" onclick="handleSeatClick(8)" id="seat8"><div class="chair-icon">🪑</div><span class="seat-label" id="s8">Seat 8</span></div>
+        </div>
+
+        <button class="btn-mic" id="micBtn" onclick="toggleMic()">🎙️ Enable Microphone</button>
+
+        <!-- Chat Box -->
+        <div class="chat-box" id="chatBox">
+            <div class="chat-msg" style="color: #ffd700;"><b>System:</b> 🪑 Seats with Chairs Active!</div>
+        </div>
+
+        <!-- Inputs -->
+        <div class="input-area">
+            <input type="text" id="msgInput" placeholder="Type message...">
+            <button class="btn-send" onclick="sendMsg()">Send</button>
+            <button class="btn-gift" onclick="sendGift()">🎁 Gift</button>
+        </div>
     </div>
-
-    <!-- 8 Voice Seats -->
-    <div class="grid" id="seatGrid">
-        <div class="seat" onclick="handleSeatClick(1)"><span id="s1">Mic 1</span></div>
-        <div class="seat" onclick="handleSeatClick(2)"><span id="s2">Mic 2</span></div>
-        <div class="seat" onclick="handleSeatClick(3)"><span id="s3">Mic 3</span></div>
-        <div class="seat" onclick="handleSeatClick(4)"><span id="s4">Mic 4</span></div>
-        <div class="seat" onclick="handleSeatClick(5)"><span id="s5">Mic 5</span></div>
-        <div class="seat" onclick="handleSeatClick(6)"><span id="s6">Mic 6</span></div>
-        <div class="seat" onclick="handleSeatClick(7)"><span id="s7">Mic 7</span></div>
-        <div class="seat" onclick="handleSeatClick(8)"><span id="s8">Mic 8</span></div>
-    </div>
-
-    <button class="btn-mic" id="micBtn" onclick="toggleMic()">🎙️ Enable Microphone</button>
-
-    <!-- Admin Quick Controls -->
-    <div class="admin-panel">
-        <button class="admin-btn" onclick="adminAction('mute')">🔇 Mute All</button>
-        <button class="admin-btn" onclick="adminAction('clear')">🧹 Clear Seats</button>
-    </div>
-
-    <!-- Chat Box -->
-    <div class="chat-box" id="chatBox">
-        <div class="chat-msg" style="color: #ffd700;"><b>System:</b> Voice, Profile & Admin Engine Online!</div>
-    </div>
-
-    <!-- Inputs -->
-    <div class="input-area">
-        <input type="text" id="msgInput" placeholder="Type message...">
-        <button class="btn-send" onclick="sendMsg()">Send</button>
-        <button class="btn-gift" onclick="sendGift()">🎁 Gift</button>
-    </div>
-
-    <div id="audioContainer"></div>
 
     <script>
         const socket = io();
@@ -75,25 +204,30 @@
         let micOn = false;
         let coins = 1000;
         let userId = 'User_' + Math.floor(1000 + Math.random() * 9000);
-        let peers = {};
 
         document.getElementById('userDisplay').innerText = 'ID: ' + userId;
+
+        function setTheme(option) {
+            if(option === 1) document.body.style.background = "linear-gradient(135deg, #0f0c29, #302b63, #24243e)";
+            if(option === 2) document.body.style.background = "linear-gradient(135deg, #0575E6, #00F666)";
+            if(option === 3) document.body.style.background = "linear-gradient(135deg, #3A1C71, #D76D77, #FFAF7B)";
+            if(option === 4) document.body.style.background = "linear-gradient(135deg, #141E30, #243B55)";
+        }
 
         function toggleMic() {
             if(!localStream) {
                 navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
                     localStream = stream;
                     micOn = true;
-                    document.getElementById('micBtn').style.background = '#238636';
+                    document.getElementById('micBtn').style.background = 'linear-gradient(45deg, #11998e, #38ef7d)';
                     document.getElementById('micBtn').innerText = '🎙️ Mic ON';
-                    socket.emit('voice-ready', userId);
                 }).catch(() => {
-                    addChat('System', '⚠️ Mic permission blocked in browser settings.');
+                    addChat('System', '⚠️ Mic permission required in browser.');
                 });
             } else {
                 micOn = !micOn;
                 localStream.getAudioTracks()[0].enabled = micOn;
-                document.getElementById('micBtn').style.background = micOn ? '#238636' : '#da3633';
+                document.getElementById('micBtn').style.background = micOn ? 'linear-gradient(45deg, #11998e, #38ef7d)' : 'linear-gradient(45deg, #cb2d3e, #ef473a)';
                 document.getElementById('micBtn').innerText = micOn ? '🎙️ Mic ON' : '🎙️ Mic OFF';
             }
         }
@@ -126,10 +260,6 @@
             addChat('Gift', '🎁 You sent a Rose Gift!');
         }
 
-        function adminAction(action) {
-            socket.emit('admin-action', { action, by: userId });
-        }
-
         function addChat(sender, text) {
             const box = document.getElementById('chatBox');
             const div = document.createElement('div');
@@ -140,40 +270,24 @@
         }
 
         socket.on('chat-msg', (data) => addChat(data.user, data.text));
-        
+
         socket.on('seat-update', (data) => {
-            const el = document.getElementById('s' + data.seat);
-            if(el) {
-                el.parentElement.classList.add('taken');
-                el.innerText = data.user;
+            const seatEl = document.getElementById('seat' + data.seat);
+            const labelEl = document.getElementById('s' + data.seat);
+            if(seatEl) {
+                seatEl.classList.add('taken');
+                seatEl.querySelector('.chair-icon').innerText = '👑';
+                labelEl.innerText = data.user;
             }
         });
 
         socket.on('seat-remove', (data) => {
-            const el = document.getElementById('s' + data.seat);
-            if(el) {
-                el.parentElement.classList.remove('taken');
-                el.innerText = 'Mic ' + data.seat;
-            }
-        });
-
-        socket.on('admin-action-received', (data) => {
-            if(data.action === 'clear') {
-                for(let i=1; i<=8; i++) {
-                    const el = document.getElementById('s' + i);
-                    el.parentElement.classList.remove('taken');
-                    el.innerText = 'Mic ' + i;
-                }
-                mySeat = null;
-                addChat('Admin', 'All seats cleared by admin.');
-            } else if(data.action === 'mute') {
-                if(localStream) {
-                    localStream.getAudioTracks()[0].enabled = false;
-                    micOn = false;
-                    document.getElementById('micBtn').style.background = '#da3633';
-                    document.getElementById('micBtn').innerText = '🎙️ Mic OFF';
-                }
-                addChat('Admin', 'All microphones muted by admin.');
+            const seatEl = document.getElementById('seat' + data.seat);
+            const labelEl = document.getElementById('s' + data.seat);
+            if(seatEl) {
+                seatEl.classList.remove('taken');
+                seatEl.querySelector('.chair-icon').innerText = '🪑';
+                labelEl.innerText = 'Seat ' + data.seat;
             }
         });
     </script>
