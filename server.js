@@ -1,47 +1,38 @@
 const express = require('express');
 const http = require('http');
 const path = require('path');
+const fs = require('fs');
 const { Server } = require('socket.io');
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
 const PORT = process.env.PORT || 10000;
+const DATA_FILE = path.join(__dirname, 'data.json');
 
-// Room Memory State
-let roomState = {
-    seats: {} // Stores seat data: { 1: { user, role, frame, medal } }
-};
+// Load or Initialize Data
+let appData = fs.existsSync(DATA_FILE) ? JSON.parse(fs.readFileSync(DATA_FILE)) : { seats: {}, users: {} };
+
+function saveData() { fs.writeFileSync(DATA_FILE, JSON.stringify(appData, null, 2)); }
 
 app.use(express.static(path.join(__dirname, 'public')));
-
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
+app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
 io.on('connection', (socket) => {
-    // Send current room state to new user
-    socket.emit('init-state', roomState);
-
-    socket.on('chat-msg', (data) => socket.broadcast.emit('chat-msg', data));
+    socket.emit('init-state', appData);
 
     socket.on('seat-take', (data) => {
-        roomState.seats[data.seat] = data;
+        appData.seats[data.seat] = data;
+        saveData();
         io.emit('seat-update', data);
     });
 
-    socket.on('seat-leave', (data) => {
-        delete roomState.seats[data.seat];
-        io.emit('seat-remove', data);
-    });
-
     socket.on('ceo-apply-perm', (data) => {
-        // Update state
-        if(roomState.seats[data.seat]) {
-            roomState.seats[data.seat] = { ...roomState.seats[data.seat], ...data };
-        }
+        // Admin Auth check can be added here
+        appData.seats[data.seat] = { ...appData.seats[data.seat], ...data };
+        saveData();
         io.emit('ceo-perm-applied', data);
     });
 });
 
-server.listen(PORT, () => console.log(`Server final listening on port ${PORT}`));
+server.listen(PORT, () => console.log(`Server Final Production Ready on ${PORT}`));
