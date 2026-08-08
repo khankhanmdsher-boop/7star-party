@@ -16,9 +16,11 @@ app.get('*', (req, res) => {
 
 io.on('connection', (socket) => {
     socket.on('chat-msg', (data) => socket.broadcast.emit('chat-msg', data));
+    socket.on('send-gift', (data) => io.emit('send-gift', data));
     socket.on('seat-take', (data) => io.emit('seat-update', data));
     socket.on('seat-leave', (data) => io.emit('seat-remove', data));
-    socket.on('admin-action', (data) => io.emit('admin-action-received', data));
+    socket.on('admin-lock', (data) => io.emit('admin-lock-seat', data));
+    socket.on('admin-clear', () => io.emit('admin-clear-seats'));
 });
 
 server.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
