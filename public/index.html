@@ -3,61 +3,201 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>7 Star Party Room - Final</title>
+    <title>7 Star Party Room - Security & Coins Transfer</title>
     <script src="/socket.io/socket.io.js"></script>
     <style>
         :root { --bg-grad: linear-gradient(135deg, #0f0c29, #302b63, #24243e); }
-        body { background: var(--bg-grad); color: #fff; font-family: sans-serif; text-align: center; margin: 0; padding: 10px; }
-        .container { max-width: 400px; margin: 0 auto; background: rgba(0,0,0,0.5); padding: 15px; border-radius: 20px; border: 1px solid #ffd700; }
+        body { background: var(--bg-grad); color: #fff; font-family: 'Segoe UI', sans-serif; text-align: center; margin: 0; padding: 12px; }
+        .container { max-width: 420px; margin: 0 auto; background: rgba(0,0,0,0.5); padding: 15px; border-radius: 20px; border: 1px solid #ffd700; box-shadow: 0 0 20px rgba(0,0,0,0.8); }
+        .header { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 12px; }
         .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 15px 0; }
-        .seat { background: rgba(255,255,255,0.1); border-radius: 15px; height: 70px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 10px; position: relative; border: 2px solid transparent; }
+        .seat { background: rgba(255,255,255,0.08); border-radius: 15px; height: 75px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; position: relative; border: 2px solid transparent; cursor: pointer; }
         .seat.taken { border: 2px solid #00ff88; }
         .seat.frame-gold { border: 3px solid #ffd700; box-shadow: 0 0 10px #ffd700; }
+        .seat.frame-neon { border: 3px solid #00ffff; box-shadow: 0 0 10px #00ffff; }
+        .seat.frame-fire { border: 3px solid #ff4500; box-shadow: 0 0 10px #ff4500; }
+        .seat.frame-diamond { border: 3px solid #e0ffff; box-shadow: 0 0 10px #e0ffff; }
         .medal-badge { position: absolute; top: -5px; right: -5px; font-size: 12px; }
+        
+        .panel { background: rgba(0,0,0,0.6); border: 1px solid #ffd700; border-radius: 12px; padding: 10px; margin-top: 12px; text-align: left; }
+        .panel-title { font-size: 12px; font-weight: bold; color: #ffd700; margin-bottom: 8px; display: block; }
+        .row { display: flex; gap: 6px; margin-bottom: 6px; }
+        input, select { padding: 8px; background: rgba(0,0,0,0.7); border: 1px solid rgba(255,255,255,0.3); color: #fff; border-radius: 6px; outline: none; font-size: 11px; }
+        button { padding: 8px 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; background: linear-gradient(45deg, #ffd700, #ffa500); color: #000; font-size: 11px; }
+        .btn-danger { background: linear-gradient(45deg, #ff416c, #ff4b2b); color: #fff; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h3>👑 7 Star Party Room</h3>
-        <div class="grid" id="seatGrid">
-            <!-- Seats will be rendered dynamically -->
+        <div class="header">
+            <div>
+                <span style="font-weight:bold; color:#ffd700; font-size: 15px;">👑 7 Star Room</span><br>
+                <span style="font-size:11px; color:#aaa;" id="userNameDisplay">User</span>
+            </div>
+            <span style="color:#ffd700; font-weight:bold;">💰 <span id="myCoins">0</span></span>
         </div>
-        <div id="chatBox" style="height:100px; overflow:auto; background:rgba(0,0,0,0.3); padding:5px; font-size:12px;"></div>
+
+        <!-- 8 Seats -->
+        <div class="grid" id="seatGrid"></div>
+
+        <!-- Coin Transfer Panel (For All / Coin Sellers) -->
+        <div class="panel">
+            <span class="panel-title">💸 Send / Transfer Coins</span>
+            <div class="row">
+                <input type="text" id="targetUser" placeholder="Target User Name" style="flex:1;">
+                <input type="number" id="transferAmount" placeholder="Amount" style="flex:1;">
+                <button onclick="sendCoins()">Send Coins</button>
+            </div>
+        </div>
+
+        <!-- CEO Master Panel (Password Protected) -->
+        <div class="panel">
+            <span class="panel-title">🔐 CEO Panel (Password Protected)</span>
+            <div id="authSection" class="row">
+                <input type="password" id="ceoPassword" placeholder="Enter CEO PIN" style="flex:1;">
+                <button onclick="unlockCEO()">Unlock Panel</button>
+            </div>
+
+            <div id="ceoControls" style="display:none;">
+                <div class="row">
+                    <select id="targetSeat" style="flex:1;">
+                        <option value="1">Seat 1</option>
+                        <option value="2">Seat 2</option>
+                        <option value="3">Seat 3</option>
+                        <option value="4">Seat 4</option>
+                        <option value="5">Seat 5</option>
+                        <option value="6">Seat 6</option>
+                        <option value="7">Seat 7</option>
+                        <option value="8">Seat 8</option>
+                    </select>
+                    <select id="roleSelect" style="flex:1;">
+                        <option value="User">User</option>
+                        <option value="Admin">Admin</option>
+                        <option value="Super Admin">Super Admin</option>
+                        <option value="Coin Seller">Coin Seller</option>
+                        <option value="Coins Merchant">Coins Merchant</option>
+                    </select>
+                </div>
+                <div class="row">
+                    <select id="frameSelect" style="flex:1;">
+                        <option value="none">No Frame</option>
+                        <option value="frame-gold">👑 Royal Gold</option>
+                        <option value="frame-neon">⚡ Neon Glow</option>
+                        <option value="frame-fire">🔥 Fire Aura</option>
+                        <option value="frame-diamond">💎 Diamond Ice</option>
+                    </select>
+                    <select id="medalSelect" style="flex:1;">
+                        <option value="none">No Medal</option>
+                        <option value="🥇">🥇 Gold Medal</option>
+                        <option value="💎">💎 Diamond Medal</option>
+                        <option value="🌟">🌟 Top Host</option>
+                        <option value="✔️">✔️ Verified Star</option>
+                    </select>
+                </div>
+                <div class="row">
+                    <input type="number" id="addCoinsInput" placeholder="+ Add Coins" style="flex:1;">
+                    <button class="btn-danger" onclick="applyCeoSettings()">Save & Apply</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="chatBox" style="height:110px; overflow-y:auto; background:rgba(0,0,0,0.4); padding:8px; font-size:11px; text-align:left; border-radius:8px; margin-top:10px;"></div>
     </div>
 
     <script>
         const socket = io();
+        let mySeat = null;
+        let myName = 'User_' + Math.floor(100 + Math.random() * 900);
+        let ceoUnlocked = false;
+
+        document.getElementById('userNameDisplay').innerText = myName;
+
         const grid = document.getElementById('seatGrid');
-        
-        // Render empty seats initially
         for(let i=1; i<=8; i++) {
-            grid.innerHTML += `<div class="seat" id="seat${i}"><span class="medal-badge" id="m${i}"></span><div style="font-size:20px">🪑</div><span id="s${i}">Seat ${i}</span></div>`;
+            grid.innerHTML += `<div class="seat" id="seat${i}" onclick="takeSeat(${i})"><span class="medal-badge" id="m${i}"></span><div style="font-size:20px" class="icon">🪑</div><span id="s${i}">Seat ${i}</span></div>`;
         }
 
+        socket.emit('register-user', { name: myName });
+
         socket.on('init-state', (state) => {
-            Object.keys(state.seats).forEach(seatNum => {
-                updateSeatUI(state.seats[seatNum]);
-            });
+            if(state.users[myName]) {
+                document.getElementById('myCoins').innerText = state.users[myName].coins;
+            }
+            Object.keys(state.seats).forEach(s => updateSeatUI(state.seats[s]));
         });
+
+        socket.on('balance-update', (coins) => {
+            document.getElementById('myCoins').innerText = coins;
+        });
+
+        function takeSeat(num) {
+            if(mySeat === num) {
+                mySeat = null;
+                socket.emit('seat-leave', { seat: num });
+                return;
+            }
+            if(!mySeat) {
+                mySeat = num;
+                socket.emit('seat-take', { seat: num, user: myName });
+            }
+        }
+
+        function unlockCEO() {
+            const pin = document.getElementById('ceoPassword').value;
+            if(pin === "7777") { // CEO Secret Password
+                ceoUnlocked = true;
+                document.getElementById('authSection').style.display = 'none';
+                document.getElementById('ceoControls').style.display = 'block';
+                addChat('System', '🔓 CEO Panel Unlocked');
+            } else {
+                alert('Wrong PIN!');
+            }
+        }
+
+        function applyCeoSettings() {
+            if(!ceoUnlocked) return;
+            const data = {
+                seat: document.getElementById('targetSeat').value,
+                role: document.getElementById('roleSelect').value,
+                frame: document.getElementById('frameSelect').value,
+                medal: document.getElementById('medalSelect').value,
+                addCoins: parseInt(document.getElementById('addCoinsInput').value) || 0
+            };
+            socket.emit('ceo-apply-perm', data);
+            document.getElementById('addCoinsInput').value = '';
+        }
+
+        function sendCoins() {
+            const target = document.getElementById('targetUser').value.trim();
+            const amount = parseInt(document.getElementById('transferAmount').value);
+            if(!target || !amount || amount <= 0) return alert('Invalid details');
+            socket.emit('transfer-coins', { from: myName, to: target, amount: amount });
+        }
+
+        function updateSeatUI(data) {
+            const el = document.getElementById('seat' + data.seat);
+            if(!el) return;
+            el.className = 'seat taken ' + (data.frame !== 'none' ? data.frame : '');
+            document.getElementById('s' + data.seat).innerText = data.user;
+            document.getElementById('m' + data.seat).innerText = data.medal !== 'none' ? data.medal : '';
+        }
 
         socket.on('seat-update', updateSeatUI);
         socket.on('seat-remove', (data) => {
-            const el = document.getElementById('seat'+data.seat);
-            el.className = 'seat';
-            el.querySelector('.medal-badge').innerText = '';
-            document.getElementById('s'+data.seat).innerText = 'Seat '+data.seat;
+            const el = document.getElementById('seat' + data.seat);
+            if(el) {
+                el.className = 'seat';
+                document.getElementById('s' + data.seat).innerText = 'Seat ' + data.seat;
+                document.getElementById('m' + data.seat).innerText = '';
+            }
         });
 
-        socket.on('ceo-perm-applied', (data) => {
-            const el = document.getElementById('seat'+data.seat);
-            if(data.frame !== 'none') el.className = 'seat taken ' + data.frame;
-            if(data.medal !== 'none') el.querySelector('.medal-badge').innerText = data.medal;
-        });
+        socket.on('chat-alert', (msg) => addChat('System', msg));
 
-        function updateSeatUI(data) {
-            const el = document.getElementById('seat'+data.seat);
-            el.classList.add('taken');
-            document.getElementById('s'+data.seat).innerText = data.user;
+        function addChat(sender, text) {
+            const box = document.getElementById('chatBox');
+            box.innerHTML += `<div><b>${sender}:</b> ${text}</div>`;
+            box.scrollTop = box.scrollHeight;
         }
     </script>
 </body>
