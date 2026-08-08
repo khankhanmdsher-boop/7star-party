@@ -10,12 +10,13 @@ const PORT = process.env.PORT || 10000;
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.get('/', (req, res) => {
+app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 io.on('connection', (socket) => {
-    console.log('User connected:', socket.id);
+    socket.on('chat-msg', (data) => socket.broadcast.emit('chat-msg', data));
+    socket.on('seat-take', (data) => io.emit('seat-update', data));
 });
 
-server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+server.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
