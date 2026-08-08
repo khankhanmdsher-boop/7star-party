@@ -2,358 +2,70 @@
 <html lang="hi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>7 Star Party Room - 3D Gift Animation System</title>
+    <title>7 Star Greedy Master</title>
     <script src="/socket.io/socket.io.js"></script>
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
-        :root { --bg-grad: linear-gradient(135deg, #0f0c29, #302b63, #24243e); }
-        body { background: var(--bg-grad); color: #fff; font-family: 'Segoe UI', sans-serif; text-align: center; margin: 0; padding: 12px; overflow-x: hidden; }
-        .container { max-width: 420px; margin: 0 auto; background: rgba(0,0,0,0.5); padding: 15px; border-radius: 20px; border: 1px solid #ffd700; box-shadow: 0 0 20px rgba(0,0,0,0.8); position: relative; }
-        .header { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 12px; }
+        body { background: #0f0c29; color: #fff; font-family: sans-serif; text-align: center; padding: 10px; }
+        .container { max-width: 400px; margin: auto; background: #1a1a2e; padding: 15px; border-radius: 15px; border: 2px solid #ffd700; }
         .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 15px 0; }
-        .seat { background: rgba(255,255,255,0.08); border-radius: 15px; height: 80px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; position: relative; border: 2px solid transparent; cursor: pointer; }
-        .seat.taken { border: 2px solid #00ff88; }
-        .seat.frame-gold { border: 3px solid #ffd700; box-shadow: 0 0 10px #ffd700; }
-        .seat.frame-neon { border: 3px solid #00ffff; box-shadow: 0 0 10px #00ffff; }
-        .seat.frame-fire { border: 3px solid #ff4500; box-shadow: 0 0 10px #ff4500; }
-        .seat.frame-diamond { border: 3px solid #e0ffff; box-shadow: 0 0 10px #e0ffff; }
-        .medal-badge { position: absolute; top: -5px; right: -5px; font-size: 12px; }
-        
-        /* 3D Gift Animation Overlay */
-        #giftOverlay {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(0,0,0,0.85); display: none; flex-direction: column;
-            align-items: center; justify-content: center; z-index: 9999;
-            pointer-events: none; animation: fadeIn 0.4s ease;
-        }
-        .gift-3d-box {
-            font-size: 110px; transform: scale(0.2) rotateY(0deg);
-            animation: pop3D 3.5s ease-in-out forwards;
-            filter: drop-shadow(0 0 35px #ffd700);
-        }
-        .gift-banner {
-            font-size: 18px; font-weight: bold; color: #ffd700;
-            margin-top: 15px; text-shadow: 0 0 15px #ff4500;
-            animation: textGlow 1.5s infinite alternate;
-        }
-
-        @keyframes pop3D {
-            0% { transform: scale(0.2) rotateY(0deg); opacity: 0; }
-            30% { transform: scale(1.3) rotateY(180deg); opacity: 1; }
-            70% { transform: scale(1.1) rotateY(360deg); opacity: 1; }
-            100% { transform: scale(0) rotateY(540deg); opacity: 0; }
-        }
-        @keyframes textGlow {
-            from { text-shadow: 0 0 10px #ffd700, 0 0 20px #ff4500; }
-            to { text-shadow: 0 0 25px #00ffff, 0 0 40px #ff00ff; }
-        }
-
-        .panel { background: rgba(0,0,0,0.6); border: 1px solid #ffd700; border-radius: 12px; padding: 10px; margin-top: 10px; text-align: left; }
-        .panel-title { font-size: 12px; font-weight: bold; color: #ffd700; margin-bottom: 6px; display: block; }
-        .row { display: flex; gap: 6px; margin-bottom: 6px; }
-        input, select { padding: 8px; background: rgba(0,0,0,0.7); border: 1px solid rgba(255,255,255,0.3); color: #fff; border-radius: 6px; outline: none; font-size: 11px; }
-        button { padding: 8px 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; background: linear-gradient(45deg, #ffd700, #ffa500); color: #000; font-size: 11px; }
-        .btn-danger { background: linear-gradient(45deg, #ff416c, #ff4b2b); color: #fff; }
-        .btn-mic { background: #00ff88; color: #000; font-size: 12px; }
-        .btn-mic.muted { background: #ff416c; color: #fff; }
+        .box { padding: 15px; background: #333; border: 2px solid #555; cursor: pointer; border-radius: 8px; font-weight: bold; }
+        .selected { background: #ffd700; color: #000; border-color: #fff; }
+        select, button { width: 100%; padding: 12px; margin: 5px 0; border-radius: 8px; border: none; font-size: 16px; }
+        .btn-play { background: #28a745; color: #fff; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
-
-    <!-- 3D Fullscreen Gift Overlay -->
-    <div id="giftOverlay">
-        <div id="gift3dIcon" class="gift-3d-box">🏎️</div>
-        <div id="giftBannerText" class="gift-banner">Lucky Cute sent Golden Supercar</div>
-    </div>
-
     <div class="container">
-        <div class="header">
-            <div>
-                <span style="font-weight:bold; color:#ffd700; font-size: 15px;">👑 7 Star Room</span><br>
-                <input type="text" id="userNameInput" value="Lucky Cute" style="width:100px; padding:2px 5px; font-size:11px;" onchange="changeMyName()">
-            </div>
-            <div>
-                <span style="color:#ffd700; font-weight:bold;">💰 <span id="myCoins">0</span></span>
-                <button id="micBtn" class="btn-mic" onclick="toggleMic()" style="margin-left:8px; display:none;">🎤 Mic ON</button>
-            </div>
+        <h3>💰 7 Star Greedy Game</h3>
+        <p>Wallet: <span id="myCoins" style="color:#ffd700; font-weight:bold;">0</span> Coins</p>
+        
+        <select id="betAmount">
+            <option value="1000">1,000 Coins</option>
+            <option value="2000">2,000 Coins</option>
+            <option value="3000">3,000 Coins</option>
+            <option value="4000">4,000 Coins</option>
+            <option value="500000">5,00,000 Coins (5 Lakh)</option>
+            <option value="2000000">20,00,000 Coins (20 Lakh)</option>
+        </select>
+
+        <div class="grid" id="grid">
+            <div class="box" onclick="toggleBox(1)" id="box1">1</div>
+            <div class="box" onclick="toggleBox(2)" id="box2">2</div>
+            <div class="box" onclick="toggleBox(3)" id="box3">3</div>
+            <div class="box" onclick="toggleBox(4)" id="box4">4</div>
+            <div class="box" onclick="toggleBox(5)" id="box5">5</div>
+            <div class="box" onclick="toggleBox(6)" id="box6">6</div>
+            <div class="box" onclick="toggleBox(7)" id="box7">7</div>
+            <div class="box" onclick="toggleBox(8)" id="box8">8</div>
         </div>
 
-        <!-- 8 Seats -->
-        <div class="grid" id="seatGrid"></div>
-
-        <!-- Mega Gift Sending Panel -->
-        <div class="panel">
-            <span class="panel-title">🎁 Send 3D Mega & Lucky Gift</span>
-            <div class="row">
-                <select id="giftTargetSeat" style="flex:1;">
-                    <option value="1">Seat 1</option>
-                    <option value="2">Seat 2</option>
-                    <option value="3">Seat 3</option>
-                    <option value="4">Seat 4</option>
-                    <option value="5">Seat 5</option>
-                    <option value="6">Seat 6</option>
-                    <option value="7">Seat 7</option>
-                    <option value="8">Seat 8</option>
-                </select>
-                <select id="giftType" style="flex:2;">
-                    <optgroup label="🎰 Lucky Gifts (Win Big Coins)">
-                        <option value="lucky_dice">🎲 Lucky Dice (100 Coins)</option>
-                        <option value="lucky_spin">🎰 Lucky Spin (200 Coins)</option>
-                    </optgroup>
-                    <optgroup label="👭 Friendship, Sister & CP (50,000+)">
-                        <option value="sister_love">👭 Sister Love (50,000 Coins)</option>
-                        <option value="bestie_forever">🤝 Bestie Forever (1,00,000 Coins)</option>
-                        <option value="cp_bond">💑 CP Lifetime Bond (2,50,000 Coins)</option>
-                    </optgroup>
-                    <optgroup label="👑 Mega Luxury 3D Gifts">
-                        <option value="supercar">🏎️ Golden Supercar (5,00,000 Coins)</option>
-                        <option value="palace">🏰 Diamond Kingdom (10,00,000 Coins)</option>
-                        <option value="rocket">🚀 Galaxy Rocket (25,00,000 Coins)</option>
-                        <option value="private_jet">🛩️ Royal Private Jet (50,00,000 Coins)</option>
-                    </optgroup>
-                </select>
-            </div>
-            <div class="row">
-                <button onclick="sendGift()" style="width:100%;">🚀 Send 3D Gift Now</button>
-            </div>
-        </div>
-
-        <!-- Coin Transfer Panel -->
-        <div class="panel">
-            <span class="panel-title">💸 Send / Transfer Coins</span>
-            <div class="row">
-                <input type="text" id="targetUser" placeholder="Target User Name" style="flex:1;">
-                <input type="number" id="transferAmount" placeholder="Amount" style="flex:1;">
-                <button onclick="sendCoins()">Send Coins</button>
-            </div>
-        </div>
-
-        <!-- CEO Master Panel (Password Protected) -->
-        <div class="panel">
-            <span class="panel-title">🔐 CEO Panel (Password Protected)</span>
-            <div id="authSection" class="row">
-                <input type="password" id="ceoPassword" placeholder="Enter CEO PIN" style="flex:1;">
-                <button onclick="unlockCEO()">Unlock Panel</button>
-            </div>
-
-            <div id="ceoControls" style="display:none;">
-                <div class="row">
-                    <select id="targetSeat" style="flex:1;">
-                        <option value="1">Seat 1</option>
-                        <option value="2">Seat 2</option>
-                        <option value="3">Seat 3</option>
-                        <option value="4">Seat 4</option>
-                        <option value="5">Seat 5</option>
-                        <option value="6">Seat 6</option>
-                        <option value="7">Seat 7</option>
-                        <option value="8">Seat 8</option>
-                    </select>
-                    <select id="roleSelect" style="flex:1;">
-                        <option value="User">User</option>
-                        <option value="Admin">Admin</option>
-                        <option value="Super Admin">Super Admin</option>
-                        <option value="Coin Seller">Coin Seller</option>
-                        <option value="Coins Merchant">Coins Merchant</option>
-                    </select>
-                </div>
-                <div class="row">
-                    <select id="frameSelect" style="flex:1;">
-                        <option value="none">No Frame</option>
-                        <option value="frame-gold">👑 Royal Gold</option>
-                        <option value="frame-neon">⚡ Neon Glow</option>
-                        <option value="frame-fire">🔥 Fire Aura</option>
-                        <option value="frame-diamond">💎 Diamond Ice</option>
-                    </select>
-                    <select id="medalSelect" style="flex:1;">
-                        <option value="none">No Medal</option>
-                        <option value="🥇">🥇 Gold Medal</option>
-                        <option value="💎">💎 Diamond Medal</option>
-                        <option value="🌟">🌟 Top Host</option>
-                        <option value="✔️">✔️ Verified Star</option>
-                    </select>
-                </div>
-                <div class="row">
-                    <input type="number" id="addCoinsInput" placeholder="+ Add Coins" style="flex:1;">
-                    <button class="btn-danger" onclick="applyCeoSettings()">Save & Apply</button>
-                </div>
-            </div>
-        </div>
-
-        <div id="chatBox" style="height:120px; overflow-y:auto; background:rgba(0,0,0,0.4); padding:8px; font-size:11px; text-align:left; border-radius:8px; margin-top:10px;"></div>
+        <button class="btn-play" onclick="playGame()">PLAY GAME</button>
+        <div id="chatBox" style="height:100px; overflow-y:auto; border:1px solid #444; margin-top:10px; font-size:12px; text-align:left; padding:5px;"></div>
     </div>
 
     <script>
         const socket = io();
-        let mySeat = null;
-        let myName = document.getElementById('userNameInput').value;
-        let ceoUnlocked = false;
-        let localStream = null;
-        let peer = null;
-        let isMuted = false;
+        let selectedBoxes = [];
+        socket.on('balance-update', (c) => document.getElementById('myCoins').innerText = c);
+        socket.on('chat-alert', (m) => document.getElementById('chatBox').innerHTML += `<div>${m}</div>`);
 
-        const GIFT_EMOJIS = {
-            lucky_dice: '🎲', lucky_spin: '🎰', sister_love: '👭',
-            bestie_forever: '🤝', cp_bond: '💑', supercar: '🏎️',
-            palace: '🏰', rocket: '🚀', private_jet: '🛩️'
-        };
-
-        const grid = document.getElementById('seatGrid');
-        for(let i=1; i<=8; i++) {
-            grid.innerHTML += `<div class="seat" id="seat${i}" onclick="takeSeat(${i})"><span class="medal-badge" id="m${i}"></span><div style="font-size:20px" class="icon">🪑</div><span id="s${i}">Seat ${i}</span></div>`;
+        function toggleBox(id) {
+            const el = document.getElementById('box'+id);
+            if (selectedBoxes.includes(id)) {
+                selectedBoxes = selectedBoxes.filter(i => i !== id);
+                el.classList.remove('selected');
+            } else if (selectedBoxes.length < 6) {
+                selectedBoxes.push(id);
+                el.classList.add('selected');
+            } else { alert("Max 6 खाने ही चुन सकते हैं!"); }
         }
 
-        socket.emit('register-user', { name: myName });
-
-        function changeMyName() {
-            myName = document.getElementById('userNameInput').value.trim() || 'User';
-            socket.emit('register-user', { name: myName });
-        }
-
-        socket.on('init-state', (state) => {
-            if(state.users[myName]) {
-                document.getElementById('myCoins').innerText = state.users[myName].coins;
-            }
-            Object.keys(state.seats).forEach(s => updateSeatUI(state.seats[s]));
-        });
-
-        socket.on('balance-update', (coins) => {
-            document.getElementById('myCoins').innerText = coins;
-        });
-
-        async function initVoice() {
-            try {
-                localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-                peer = new Peer();
-                peer.on('open', (id) => {
-                    socket.emit('peer-ready', { seat: mySeat, peerId: id });
-                });
-                peer.on('call', (call) => {
-                    call.answer(localStream);
-                    call.on('stream', (remoteStream) => {
-                        const audio = new Audio();
-                        audio.srcObject = remoteStream;
-                        audio.play();
-                    });
-                });
-                document.getElementById('micBtn').style.display = 'inline-block';
-            } catch(e) {
-                console.log('Voice Access Denied/Error:', e);
-            }
-        }
-
-        function toggleMic() {
-            if(!localStream) return;
-            isMuted = !isMuted;
-            localStream.getAudioTracks()[0].enabled = !isMuted;
-            const btn = document.getElementById('micBtn');
-            btn.innerText = isMuted ? '🔇 Muted' : '🎤 Mic ON';
-            btn.className = isMuted ? 'btn-mic muted' : 'btn-mic';
-        }
-
-        socket.on('user-peer-id', (data) => {
-            if(peer && localStream && data.peerId) {
-                const call = peer.call(data.peerId, localStream);
-                call.on('stream', (remoteStream) => {
-                    const audio = new Audio();
-                    audio.srcObject = remoteStream;
-                    audio.play();
-                });
-            }
-        });
-
-        function takeSeat(num) {
-            if(mySeat === num) {
-                mySeat = null;
-                document.getElementById('micBtn').style.display = 'none';
-                if(localStream) localStream.getTracks().forEach(t => t.stop());
-                socket.emit('seat-leave', { seat: num });
-                return;
-            }
-            if(!mySeat) {
-                mySeat = num;
-                initVoice();
-                socket.emit('seat-take', { seat: num, user: myName });
-            }
-        }
-
-        function unlockCEO() {
-            const pin = document.getElementById('ceoPassword').value;
-            if(pin === "7777") {
-                ceoUnlocked = true;
-                document.getElementById('authSection').style.display = 'none';
-                document.getElementById('ceoControls').style.display = 'block';
-                addChat('System', '🔓 CEO Panel Unlocked');
-            } else {
-                alert('Wrong PIN!');
-            }
-        }
-
-        function applyCeoSettings() {
-            if(!ceoUnlocked) return;
-            const data = {
-                seat: document.getElementById('targetSeat').value,
-                role: document.getElementById('roleSelect').value,
-                frame: document.getElementById('frameSelect').value,
-                medal: document.getElementById('medalSelect').value,
-                addCoins: parseInt(document.getElementById('addCoinsInput').value) || 0
-            };
-            socket.emit('ceo-apply-perm', data);
-            document.getElementById('addCoinsInput').value = '';
-        }
-
-        function sendCoins() {
-            const target = document.getElementById('targetUser').value.trim();
-            const amount = parseInt(document.getElementById('transferAmount').value);
-            if(!target || !amount || amount <= 0) return alert('Invalid details');
-            socket.emit('transfer-coins', { from: myName, to: target, amount: amount });
-        }
-
-        function sendGift() {
-            const targetSeat = document.getElementById('giftTargetSeat').value;
-            const giftType = document.getElementById('giftType').value;
-            socket.emit('send-gift', { from: myName, seat: targetSeat, gift: giftType });
-        }
-
-        // 3D Gift Animation Trigger
-        socket.on('trigger-3d-gift', (data) => {
-            const overlay = document.getElementById('giftOverlay');
-            const icon = document.getElementById('gift3dIcon');
-            const banner = document.getElementById('giftBannerText');
-
-            icon.innerText = GIFT_EMOJIS[data.gift] || '🎁';
-            banner.innerText = `${data.from} sent ${data.giftName} to ${data.to}!`;
-
-            overlay.style.display = 'flex';
-            setTimeout(() => {
-                overlay.style.display = 'none';
-            }, 3500);
-        });
-
-        function updateSeatUI(data) {
-            const el = document.getElementById('seat' + data.seat);
-            if(!el) return;
-            el.className = 'seat taken ' + (data.frame !== 'none' ? data.frame : '');
-            document.getElementById('s' + data.seat).innerText = data.user;
-            document.getElementById('m' + data.seat).innerText = data.medal !== 'none' ? data.medal : '';
-        }
-
-        socket.on('seat-update', updateSeatUI);
-        socket.on('seat-remove', (data) => {
-            const el = document.getElementById('seat' + data.seat);
-            if(el) {
-                el.className = 'seat';
-                document.getElementById('s' + data.seat).innerText = 'Seat ' + data.seat;
-                document.getElementById('m' + data.seat).innerText = '';
-            }
-        });
-
-        socket.on('chat-alert', (msg) => addChat('System', msg));
-
-        function addChat(sender, text) {
-            const box = document.getElementById('chatBox');
-            box.innerHTML += `<div><b>${sender}:</b> ${text}</div>`;
-            box.scrollTop = box.scrollHeight;
+        function playGame() {
+            if(selectedBoxes.length === 0) return alert("कोई खाना चुनें!");
+            socket.emit('play-coin-game', { 
+                boxes: selectedBoxes, 
+                bet: parseInt(document.getElementById('betAmount').value) 
+            });
         }
     </script>
 </body>

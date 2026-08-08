@@ -1,78 +1,48 @@
 const express = require('express');
-const http = require('http');
-const path = require('path');
-const fs = require('fs');
-const { Server } = require('socket.io');
-
 const app = express();
-const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: "*" } });
-const PORT = process.env.PORT || 10000;
-const DATA_FILE = path.join(__dirname, 'data.json');
+const http = require('http').createServer(app);
+const io = require('socket.io')(http);
 
-let appData = fs.existsSync(DATA_FILE) ? JSON.parse(fs.readFileSync(DATA_FILE)) : { seats: {}, users: {} };
+let users = { "Player1": { coins: 5000000 } };
 
-function saveData() { fs.writeFileSync(DATA_FILE, JSON.stringify(appData, null, 2)); }
-
-app.use(express.static(path.join(__dirname, 'public')));
-app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
+app.use(express.static('public'));
 
 io.on('connection', (socket) => {
-    let currentUserName = null;
+    socket.emit('balance-update', users["Player1"].coins);
 
-    socket.on('register-user', (data) => {
-        currentUserName = data.name;
-        if(!appData.users[currentUserName]) {
-            appData.users[currentUserName] = { coins: 1000, role: 'User' };
-            saveData();
-        }
-        socket.emit('init-state', appData);
-    });
+    socket.on('play-coin-game', (data) => {
+        const { boxes, bet } = data;
+        const totalBet = bet * boxes.length;
+        const user = users["Player1"];
 
-    socket.on('seat-take', (data) => {
-        appData.seats[data.seat] = { ...data, frame: 'none', medal: 'none' };
-        saveData();
-        io.emit('seat-update', appData.seats[data.seat]);
-    });
+        if (boxes.length > 6) return socket.emit('chat-alert', '❌ Max 6 बॉक्स ही चुन सकते हैं!');
+        if (user.coins < totalBet) return socket.emit('chat-alert', '❌ आपके पास कॉइन्स कम हैं!');
+        
+        user.coins -= totalBet;
 
-    socket.on('seat-leave', (data) => {
-        delete appData.seats[data.seat];
-        saveData();
-        io.emit('seat-remove', data);
-    });
+        const rand = Math.random();
+        let multiplier = 0;
 
-    socket.on('ceo-apply-perm', (data) => {
-        if(appData.seats[data.seat]) {
-            const seatUser = appData.seats[data.seat].user;
-            appData.seats[data.seat].role = data.role;
-            appData.seats[data.seat].frame = data.frame;
-            appData.seats[data.seat].medal = data.medal;
+        if (rand < 0.65) multiplier = 0;      // 65% हार
+        else if (rand < 0.80) multiplier = 1.5; // 15% रिटर्न
+        else if (rand < 0.90) multiplier = 2;   // 10% रिटर्न
+        else if (rand < 0.95) multiplier = 5;   // 5% रिटर्न
+        else multiplier = 10;                  // 5% जैकपॉट रिटर्न
 
-            if(data.addCoins > 0 && appData.users[seatUser]) {
-                appData.users[seatUser].coins += data.addCoins;
-                io.emit('chat-alert', `💸 CEO added ${data.addCoins} coins to ${seatUser}`);
-            }
+        const winBox = Math.floor(Math.random() * 8) + 1;
+        const isWin = boxes.includes(winBox);
 
-            saveData();
-            io.emit('seat-update', appData.seats[data.seat]);
-            io.emit('init-state', appData);
-        }
-    });
-
-    socket.on('transfer-coins', (data) => {
-        const sender = appData.users[data.from];
-        const receiver = appData.users[data.to];
-
-        if(sender && receiver && sender.coins >= data.amount) {
-            sender.coins -= data.amount;
-            receiver.coins += data.amount;
-            saveData();
-            socket.emit('balance-update', sender.coins);
-            io.emit('chat-alert', `💰 ${data.from} transferred ${data.amount} coins to ${data.to}`);
+        if (isWin && multiplier > 0) {
+            const winAmount = totalBet * multiplier;
+            user.coins += winAmount;
+            io.emit('chat-alert', `🎉 जीत! विनिंग बॉक्स: ${winBox} | मिले: ${winAmount} Coins!`);
         } else {
-            socket.emit('chat-alert', '❌ Transfer Failed: Insufficient Coins or User Not Found');
+            io.emit('chat-alert', `💔 हार गए! विनिंग बॉक्स था: ${winBox}`);
         }
+
+        socket.emit('balance-update', user.coins);
     });
 });
 
-server.listen(PORT, () => console.log(`Server Security & Coins Active on ${PORT}`));
+const PORT = process.env.PORT || 10000;
+http.listen(PORT, () => console.log('7 Star Engine Active on port ' + PORT));
