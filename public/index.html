@@ -2,78 +2,38 @@
 <html lang="hi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>7 Star Party & Greedy Game</title>
-    <script src="/socket.io/socket.io.js"></script>
+    <title>7 Star Party VIP</title>
     <style>
-        body { background: #0f0c29; color: #fff; font-family: sans-serif; text-align: center; padding: 10px; margin: 0; }
-        .container { max-width: 400px; margin: auto; background: #1a1a2e; padding: 15px; border-radius: 15px; border: 2px solid #ffd700; }
-        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 15px 0; }
-        .box { padding: 15px; background: #333; border: 2px solid #555; cursor: pointer; border-radius: 8px; font-weight: bold; }
-        .selected { background: #ffd700; color: #000; border-color: #fff; }
-        select, button { width: 100%; padding: 12px; margin: 5px 0; border-radius: 8px; border: none; font-size: 16px; }
-        .btn-play { background: #28a745; color: #fff; font-weight: bold; cursor: pointer; }
-        #chatBox { height: 120px; overflow-y: auto; border: 1px solid #444; margin-top: 10px; font-size: 12px; text-align: left; padding: 5px; background: rgba(0,0,0,0.3); }
+        body { 
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); 
+            color: #ffd700; font-family: 'Segoe UI', sans-serif; text-align: center; margin: 0; padding: 10px;
+        }
+        .header { font-size: 24px; font-weight: bold; text-shadow: 2px 2px 10px #ff0000; margin-bottom: 15px; }
+        .mic-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; padding: 10px; }
+        .mic { 
+            background: #1a1a2e; border: 2px solid #ffd700; border-radius: 50%; width: 60px; height: 60px;
+            display: flex; align-items: center; justify-content: center; margin: auto; font-weight: bold;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+        }
+        .chat-box { background: rgba(0,0,0,0.5); height: 200px; border-radius: 10px; margin: 15px 0; border: 1px solid #444; }
+        .controls { display: flex; gap: 10px; padding: 10px; }
+        input { flex: 1; padding: 10px; border-radius: 5px; border: none; }
+        button { padding: 10px 20px; border-radius: 5px; border: none; font-weight: bold; cursor: pointer; }
+        .btn-send { background: #ffd700; color: #000; }
+        .btn-gift { background: #ff4d4d; color: #fff; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h3>👑 7 Star Party & Greedy Game</h3>
-        <p>Wallet: <span id="myCoins" style="color:#ffd700; font-weight:bold;">0</span> Coins</p>
-        
-        <select id="betAmount">
-            <option value="1000">1,000 Coins</option>
-            <option value="2000">2,000 Coins</option>
-            <option value="3000">3,000 Coins</option>
-            <option value="4000">4,000 Coins</option>
-            <option value="500000">5,00,000 Coins (5 Lakh)</option>
-            <option value="2000000">20,00,000 Coins (20 Lakh)</option>
-        </select>
-
-        <div class="grid" id="grid">
-            <div class="box" onclick="toggleBox(1)" id="box1">1</div>
-            <div class="box" onclick="toggleBox(2)" id="box2">2</div>
-            <div class="box" onclick="toggleBox(3)" id="box3">3</div>
-            <div class="box" onclick="toggleBox(4)" id="box4">4</div>
-            <div class="box" onclick="toggleBox(5)" id="box5">5</div>
-            <div class="box" onclick="toggleBox(6)" id="box6">6</div>
-            <div class="box" onclick="toggleBox(7)" id="box7">7</div>
-            <div class="box" onclick="toggleBox(8)" id="box8">8</div>
-        </div>
-
-        <button class="btn-play" onclick="playGame()">PLAY GAME</button>
-        <div id="chatBox"></div>
+    <div class="header">⭐ 7 Star Party Room ⭐</div>
+    <div class="mic-grid">
+        <div class="mic">M1</div><div class="mic">M2</div><div class="mic">M3</div><div class="mic">M4</div>
+        <div class="mic">M5</div><div class="mic">M6</div><div class="mic">M7</div><div class="mic">M8</div>
     </div>
-
-    <script>
-        const socket = io();
-        let selectedBoxes = [];
-        
-        socket.on('balance-update', (c) => document.getElementById('myCoins').innerText = c);
-        socket.on('chat-alert', (m) => {
-            const box = document.getElementById('chatBox');
-            box.innerHTML += `<div>${m}</div>`;
-            box.scrollTop = box.scrollHeight;
-        });
-
-        function toggleBox(id) {
-            const el = document.getElementById('box'+id);
-            if (selectedBoxes.includes(id)) {
-                selectedBoxes = selectedBoxes.filter(i => i !== id);
-                el.classList.remove('selected');
-            } else if (selectedBoxes.length < 6) {
-                selectedBoxes.push(id);
-                el.classList.add('selected');
-            } else { alert("Max 6 खाने ही चुन सकते हैं!"); }
-        }
-
-        function playGame() {
-            if(selectedBoxes.length === 0) return alert("कोई खाना चुनें!");
-            socket.emit('play-coin-game', { 
-                boxes: selectedBoxes, 
-                bet: parseInt(document.getElementById('betAmount').value) 
-            });
-        }
-    </script>
+    <div class="chat-box" id="chat"></div>
+    <div class="controls">
+        <input type="text" placeholder="Message...">
+        <button class="btn-send">Send</button>
+        <button class="btn-gift">Gift</button>
+    </div>
 </body>
 </html>
